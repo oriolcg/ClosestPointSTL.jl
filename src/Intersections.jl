@@ -23,8 +23,9 @@ function intersects!(bvh_tree::BVH, sphere::Sphere{T}, triangle_list::Vector{Int
 
   # Check if the bounding box of the node intersects with the sphere
   if intersects(aabb, sphere)
-    # If the bounding box intersects with the sphere, recursively check its children
-    intersects!(children[1], sphere, triangle_list)
-    intersects!(children[2], sphere, triangle_list)
+    for child in children
+        # If the bounding box intersects with the sphere, recursively check its children
+        intersects!(child, sphere, triangle_list)
+    end
   end
 end
