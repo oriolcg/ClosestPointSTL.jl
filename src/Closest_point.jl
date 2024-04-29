@@ -72,20 +72,20 @@ function closest_point_projection(mesh::AbstractMesh, bvh_tree::BVH, point::Poin
     edge_dist = dist(projected_point, v1) + dist(v1, v2)
     if edge_dist < min_dist
         min_dist = edge_dist
-        closest_point = closest_point_on_segment(projected_point, v1, v2)
+        closest_point = closest_point_on_segment(projected_point, Point{N,T}(v1), Point{N,T}(v2))
     end
 
     # Check distance to edge v2-v3
     edge_dist = dist(projected_point, v2) + dist(v2, v3)
     if edge_dist < min_dist
         min_dist = edge_dist
-        closest_point = closest_point_on_segment(projected_point, v2, v3)
+        closest_point = closest_point_on_segment(projected_point, Point{N,T}(v2), Point{N,T}(v3))
     end
 
     # Check distance to edge v3-v1
     edge_dist = dist(projected_point, v3) + dist(v3, v1)
     if edge_dist < min_dist
-        closest_point = closest_point_on_segment(projected_point, v3, v1)
+        closest_point = closest_point_on_segment(projected_point, Point{N,T}(v3), Point{N,T}(v1))
     end
 
     # # Check if the projected point is inside the triangle
