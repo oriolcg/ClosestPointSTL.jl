@@ -6,7 +6,7 @@ function find_nearby_triangles(mesh::AbstractMesh, bvh_tree::BVH, point::Point{N
 end
 
 # Define a function to compute the closest point on a line segment to a given point
-function closest_point_on_segment(point::Point{N,T}, segment_start::Point{N,T}, segment_end::Point{N,T}) where T
+function closest_point_on_segment(point::Point{N,T}, segment_start::Point{N,T}, segment_end::Point{N,T}) where {N,T}
  segment_direction = segment_end - segment_start
  segment_length = norm(segment_direction)
  segment_direction = normalize(segment_direction)
