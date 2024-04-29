@@ -5,7 +5,7 @@ function intersects(aabb::AABB, sphere::Sphere{T}) where T
   closest_point = Point3{T}([clamp(sphere.center[i],aabb.min[i],aabb.max[i]) for i in 1:length(sphere.center)])
 
   # Return true if the distance between the closest point and the sphere center is less than the sphere radius
-  distance2 = sum((closest_point .- sphere.center).^2)
+  distance2 = norm(closest_point - sphere.center)^2
   return distance2 <= radius(sphere)^2
 end
 
