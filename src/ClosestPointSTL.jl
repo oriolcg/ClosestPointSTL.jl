@@ -11,6 +11,7 @@ using NearestNeighbors
 using Rotations
 using StaticArrays
 using TimerOutputs
+using LinearAlgebra
 
 export closest_point_projection
 export intersects
