@@ -7,7 +7,7 @@ using Distances
 using FileIO
 using GeometryBasics
 using MeshIO
-using Nearestneighbors
+using NearestNeighbors
 using Rotations
 using StaticArrays
 using TimerOutputs
