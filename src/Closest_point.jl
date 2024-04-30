@@ -24,16 +24,18 @@ end
 
 # Function to compute the closest point projection
 function closest_point_projection(mesh::AbstractMesh, bvh_tree::BVH, point::Point{N,T}, radius::Float64, verbose::Bool=false) where {N,T}
-  closest_point = point
-  min_dist = radius
+  closest_point = Point(0.0,0.0,0.0)#point
+  min_dist = Inf
 
   nearby_triangles = find_nearby_triangles(mesh, bvh_tree, point, radius)
-  if isempty(nearby_triangles) && verbose
-    println("There is no close point around $point in a radius of $radius.")
+  if isempty(nearby_triangles)
+    if verbose
+      println("There is no close point around $point in a radius of $radius.")
+    end
     return nothing
   end
 
-  for face in nearby_triangles
+  for (iface,face) in enumerate(nearby_triangles)
 
     # Get vertices of the face
     v1,v2,v3 = coordinates(face)
@@ -46,66 +48,57 @@ function closest_point_projection(mesh::AbstractMesh, bvh_tree::BVH, point::Poin
     v = point - v1
     d = dot(v, normal)
     projected_point = point - d * normal
+    dist0 = dist(projected_point, point)
+    # println("dist0: ", dist0, " radius: ", radius)
+    # if dist0 > radius
+    #   continue
+    # end
 
     # Check if the projected point is inside the triangle
-    u = dot(v2 - v1, v2 - v1)
-    v = dot(v2 - v1, v3 - v1)
-    w = dot(projected_point - v1, v2 - v1)
-    uu = dot(v3 - v1, v3 - v1)
-    vv = dot(v3 - v1, projected_point - v1)
-    uv = dot(v3 - v1, v2 - v1)
-    denom = u * vv - v * uv
-    s = (vv * w - v * w) / denom
-    t = (u * w - uv * w) / denom
+    d00 = dot(v2 - v1, v2 - v1)
+    d01 = dot(v2 - v1, v3 - v1)
+    d11 = dot(v3 - v1, v3 - v1)
+    d20 = dot(projected_point - v1, v2 - v1)
+    d21 = dot(projected_point - v1, v3 - v1)
+    denom = d00 * d11 - d01 * d01
+    s = (d00 * d21 - d01 * d20) / denom
+    t = (d11 * d20 - d01 * d21) / denom
+    α = 1 - s - t
+    # println(s, " ", t, " ", s + t)
 
     # If the projected point is inside the triangle, return it
-    if 0 <= s <= 1 && 0 <= t <= 1 && s + t <= 1
+    if 0 <= s <= 1 && 0 <= t <= 1 && 0 <= α <= 1
+      if dist0 < min_dist
+        min_dist = dist0
         closest_point = projected_point
         continue
+      end
     end
 
-    # Otherwise, find the closest point on the edges of the triangle
-    min_dist = Inf
-    closest_point = projected_point
-
     # Check distance to edge v1-v2
-    edge_dist = dist(projected_point, v1) + dist(v1, v2)
-    if edge_dist < min_dist
-        min_dist = edge_dist
-        closest_point = closest_point_on_segment(projected_point, Point{N,T}(v1), Point{N,T}(v2))
+    closest_point1 = closest_point_on_segment(projected_point, Point{N,T}(v1), Point{N,T}(v2))
+    dist1 = dist(closest_point1, point)
+    if dist1 < min_dist
+        min_dist = dist1
+        closest_point = closest_point1
     end
 
     # Check distance to edge v2-v3
-    edge_dist = dist(projected_point, v2) + dist(v2, v3)
-    if edge_dist < min_dist
-        min_dist = edge_dist
-        closest_point = closest_point_on_segment(projected_point, Point{N,T}(v2), Point{N,T}(v3))
+    closest_point2 = closest_point_on_segment(projected_point, Point{N,T}(v2), Point{N,T}(v3))
+    dist2 = dist(closest_point2, point)
+    if dist2 < min_dist
+        min_dist = dist2
+        closest_point = closest_point2
     end
 
     # Check distance to edge v3-v1
-    edge_dist = dist(projected_point, v3) + dist(v3, v1)
-    if edge_dist < min_dist
-        closest_point = closest_point_on_segment(projected_point, Point{N,T}(v3), Point{N,T}(v1))
+    closest_point3 = closest_point_on_segment(projected_point, Point{N,T}(v3), Point{N,T}(v1))
+    dist3 = dist(closest_point3, point)
+    if dist3 < min_dist
+        min_dist = dist3
+        closest_point = closest_point3
     end
 
-    # # Check if the projected point is inside the triangle
-    # if all(dot(cross(vertices[i] - vertices[i-1], vertices[i+1] - vertices[i-1]), projected_point - vertices[i-1]) > 0 for i in 2:length(vertices)-1)
-    #   # Compute the distance between the point and the projected point
-    #   dist = euclidean(point, projected_point)
-    #   if dist < min_dist
-    #     min_dist = dist
-    #     closest_point = projected_point
-    #   end
-    # else
-    #   # Compute the distance to each vertex
-    #   for vertex in vertices
-    #     dist = euclidean(point, vertex)
-    #     if dist < min_dist
-    #       min_dist = dist
-    #       closest_point = vertex
-    #     end
-    #   end
-    # end
   end
 
   return closest_point
